@@ -1,29 +1,53 @@
+import { useEffect } from "react";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { useUserStore } from "./lib/userStore";
+import { useChatStore } from "./lib/chatStore";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "./lib/firebase";
 
+// components imported here;
+import List from "./components/list/List";
+import Chat from "./components/chat/Chat";
+import Detail from "./components/detail/Detail";
+import Login from "./components/login/Login";
 
-// components imported here; 
-import List from './components/list/List';
-import Chat from './components/chat/Chat';
-import Detail from './components/detail/Detail'; 
-import Login from './components/login/Login';
-import { ToastContainer } from 'react-toastify';
-import "react-toastify/dist/ReactToastify.css"
 
 
 const App = () => {
-  const user = false; 
+  
+  const { currentUser, isLoading, fetchUserInfo } = useUserStore(); 
+  const { chatId } = useChatStore(); 
+
+  
+  useEffect(() => {
+    const unSub = onAuthStateChanged(auth, (user)=> {
+      fetchUserInfo(user?.uid); 
+    })
+    
+    return () => {
+      unSub(); 
+    }
+  }, [fetchUserInfo])
+  
+  if(isLoading) return <div className="loading">Loading...</div>
+
+
   return (
-    <div className='container'>
-      {user ? (
+    <div className="container">
+      {currentUser ? (
         <>
-        <List /> 
-      <Chat /> 
-      <Detail /> 
+          <List />
+          {chatId && <Chat />}
+          {chatId && <Detail />}
         </>
-      ): <Login />  }
+      ) : (
+        <Login />
+      )}
 
-      <ToastContainer position='top-center' /> 
+      <ToastContainer position="top-center" />
     </div>
-  )
-}
+  );
+};
 
-export default App
+export default App;
